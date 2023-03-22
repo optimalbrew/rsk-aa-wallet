@@ -40,17 +40,16 @@ contract TwoUserMultisig is IERC1271 {
     }
 
     function validateTransaction(
-        bytes32,
         bytes32 _suggestedSignedHash,
         Transaction calldata _transaction
-    ) external payable  returns (bytes4 magic) {
+    ) public payable  returns (bytes4 magic) {
         magic = _validateTransaction(_suggestedSignedHash, _transaction);
     }
 
     function _validateTransaction(
         bytes32 _suggestedSignedHash,
         Transaction calldata _transaction
-    ) internal returns (bytes4 magic) {
+    ) internal view returns (bytes4 magic) {
         // Incrementing the nonce of the account.
         // Note, that reserved[0] by convention is currently equal to the nonce passed in the transaction
         /* SystemContractsCaller.systemCallWithPropagatedRevert(
@@ -81,13 +80,15 @@ contract TwoUserMultisig is IERC1271 {
         }
     }
 
+    event Execute(bytes);
+
     function executeTransaction(
-        bytes32,
-        bytes32,
         Transaction calldata _transaction
-    ) external payable  {
+    ) public payable  { //TODO (pato) instead of public, should be a check to the address of account.
+        //emit Execute(_transaction);
         _executeTransaction(_transaction);
     }
+
 
     function _executeTransaction(Transaction calldata _transaction) internal {
         address to = address(uint160(_transaction.to));
@@ -111,6 +112,7 @@ contract TwoUserMultisig is IERC1271 {
                 success := call(gas(), to, value, add(data, 0x20), mload(data), 0, 0)
             }
             require(success);
+            emit Execute(_transaction.data);
         }
     }
 

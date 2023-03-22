@@ -33,9 +33,9 @@ struct Transaction {
     // The type of the transaction.
     uint256 txType;
     // The caller.
-    uint256 from;
+    address from;
     // The callee.
-    uint256 to;
+    address to;
     // The gasLimit to pass with the transaction.
     // It has the same meaning as Ethereum's gasLimit.
     uint256 gasLimit;
@@ -43,10 +43,7 @@ struct Transaction {
     //uint256 gasPerPubdataByteLimit;
     // The maximum fee per gas that the user is willing to pay.
     // It is akin to EIP1559's maxFeePerGas.
-    uint256 maxFeePerGas;
-    // The maximum priority fee per gas that the user is willing to pay.
-    // It is akin to EIP1559's maxPriorityFeePerGas.
-    uint256 maxPriorityFeePerGas;
+    uint256 gasPrice;
     // The transaction's paymaster. If there is no paymaster, it is equal to 0.
     //uint256 paymaster;
     // The nonce of the transaction.
@@ -62,7 +59,7 @@ struct Transaction {
     // it would allow easier proof integration (in case we will need
     // some special circuit for preprocessing transactions).
     // todo(shree) used for chainID encoding in legacy transactions
-    uint256[4] reserved;
+    // uint256[4] reserved;
     // The transaction's calldata.
     bytes data;
     // The signature of the transaction.
@@ -167,7 +164,7 @@ library TransactionHelper {
         bytes memory encodedGasParam;
         {
             bytes memory encodedGasPrice = RLPEncoder.encodeUint256(
-                _transaction.maxFeePerGas
+                _transaction.gasPrice
             );
             bytes memory encodedGasLimit = RLPEncoder.encodeUint256(
                 _transaction.gasLimit
@@ -197,9 +194,9 @@ library TransactionHelper {
 
         // Encode `chainId` according to EIP-155, but only if the `chainId` is specified in the transaction.
         bytes memory encodedChainId;
-        if (_transaction.reserved[0] != 0) {
-            encodedChainId = bytes.concat(RLPEncoder.encodeUint256(block.chainid), hex"80_80");
-        }
+        // if (_transaction.reserved[0] != 0) {
+        //     encodedChainId = bytes.concat(RLPEncoder.encodeUint256(block.chainid), hex"80_80");
+        // }
 
         bytes memory encodedListLength;
         
@@ -248,8 +245,8 @@ library TransactionHelper {
                 _transaction.to,
                 _transaction.gasLimit,
                 //_transaction.gasPerPubdataByteLimit,
-                _transaction.maxFeePerGas,
-                _transaction.maxPriorityFeePerGas,
+                _transaction.gasPrice,
+                //_transaction.maxPriorityFeePerGas,
                 //_transaction.paymaster,
                 _transaction.nonce,
                 _transaction.value,
@@ -282,6 +279,6 @@ library TransactionHelper {
     // Returns the balance required to process the transaction.
     // todo(shree) this used to have additional logic related to paymaster
 	function totalRequiredBalance(Transaction calldata _transaction) internal pure returns (uint256 requiredBalance) {
-        requiredBalance =  _transaction.maxFeePerGas * _transaction.gasLimit + _transaction.value;
+        requiredBalance =  _transaction.gasPrice * _transaction.gasLimit + _transaction.value;
     }
 }
